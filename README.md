@@ -20,9 +20,9 @@
 
 | Alumno | Legajo | 
 |---------|---------|
-| Federico García | [Completar] |
+| Federico E. García Bengolea | 101613 |
 | Alan J | [Completar] | 
-| Jazmin | [Completar] | 
+| Jazmin Herrera | [Completar] | 
 | Fernando  | [Completar] | 
 
 ---
