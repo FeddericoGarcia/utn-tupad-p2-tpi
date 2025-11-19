@@ -32,6 +32,26 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
         }
         return Optional.empty();
     }
+    
+    /*REVISAR
+    public void crear(Connection conn, CodigoBarras cb, Long idProducto) {
+        String sql = "INSERT INTO codigo_barras (codigo, producto_id) VALUES (?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, cb.getId());
+            ps.setLong(2, idProducto);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            if (e.getMessage().contains("Duplicate"))
+                throw new DataAccessException("Este código de barras ya existe.", e);
+
+            throw new DataAccessException("Error al crear código de barras.", e);
+        }
+    }
+*/
 
     // Implementación de GenericDAO.crear sin Connection (no usada para operaciones transaccionales)
     @Override
@@ -122,5 +142,17 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
         cb.setObservaciones(rs.getString("observaciones"));
         cb.setEliminado(rs.getBoolean("eliminado"));
         return cb;
+    }
+    
+    public boolean existeCodigo(Connection conn, String codigo) {
+        String sql = "SELECT id FROM codigo_barras WHERE codigo = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, codigo);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error al verificar existencia de código de barras.", e);
+        }
     }
 }
