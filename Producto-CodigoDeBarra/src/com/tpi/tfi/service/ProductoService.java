@@ -5,9 +5,12 @@ import com.tpi.tfi.dao.CodigoBarrasDAO;
 import com.tpi.tfi.dao.ProductoDAO;
 import com.tpi.tfi.entities.CodigoBarras;
 import com.tpi.tfi.entities.Producto;
+import com.tpi.tfi.exceptions.DataAccessException;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -18,7 +21,7 @@ public class ProductoService {
     private final Scanner sc = new Scanner(System.in);
 
     // Operación transaccional: crear producto y asociar codigo de barras (en la misma transacción)
-    public void crearProductoConCodigoBarras() {
+    public void crearProductoConCodigoBarras() throws SQLException {
         System.out.println("\n--- Crear Producto con Código de Barras (Transaccional) ---");
 
         // Datos del producto
@@ -38,87 +41,104 @@ public class ProductoService {
         try (Connection conn = DatabaseConnection.getConnection()) {
             try {
                 conn.setAutoCommit(false);
-                // 1) crear producto
-                Optional<Long> idProdOpt = productoDAO.crear(p, conn);
-                if (idProdOpt.isEmpty()) throw new RuntimeException("No se pudo crear producto.");
-                Long idProd = idProdOpt.get();
-                p.setId(idProd);
 
-                // 2) crear codigo de barras asignando producto_id
-                Optional<Long> idCbOpt = cbDAO.crear(cb, conn, idProd);
-                if (idCbOpt.isEmpty()) throw new RuntimeException("No se pudo crear código de barras.");
-                Long idCb = idCbOpt.get();
-                cb.setId(idCb);
+                // operaciones
+                Long idProd = productoDAO.crear(p, conn)
+                        .orElseThrow(() -> new DataAccessException("No se pudo crear el producto", null));
 
-                // commit
+                Long idCb = cbDAO.crear(cb, conn, idProd)
+                        .orElseThrow(() -> new DataAccessException("No se pudo crear el código de barras", null));
+
                 conn.commit();
-                System.out.println("✅ Producto y Código de Barras creados correctamente. IDs: Producto=" + idProd + " CB=" + idCb);
+                System.out.println("Operación exitosa.");
             } catch (Exception e) {
-                conn.rollback();
-                System.out.println("❌ Ocurrió un error. Se hizo rollback. " + e.getMessage());
-                e.printStackTrace();
+                try {
+                    conn.rollback();
+                    System.out.println("⚠ Se realizó un rollback debido a un error.");
+                } catch (SQLException ex) {
+                    throw new DataAccessException("Error crítico: no se pudo revertir la transacción", ex);
+                }
+                throw e; // vuelve a lanzar para Service/Controller
             } finally {
                 conn.setAutoCommit(true);
             }
-        } catch (Exception ex) {
-            System.out.println("❌ Error de conexión: " + ex.getMessage());
-            ex.printStackTrace();
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error de acceso a datos: " + e.getMessage());
         }
     }
 
     public void listarProductos() {
-        List<Producto> lista = productoDAO.obtenerTodos();
-        System.out.println("\n--- Productos ---");
-        if (lista.isEmpty()) System.out.println("(sin registros)");
-        else {
-            for (Producto p : lista) {
-                System.out.println(p);
-                if (p.getCodigoBarras() != null) System.out.println("   -> " + p.getCodigoBarras());
+        try {
+            List<Producto> lista = productoDAO.obtenerTodos();
+            System.out.println("\n--- Productos ---");
+            if (lista.isEmpty()) System.out.println("(sin registros)");
+            else {
+                for (Producto p : lista) {
+                    System.out.println(p);
+                    if (p.getCodigoBarras() != null) System.out.println("   -> " + p.getCodigoBarras());
+                }
             }
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al listar productos. Detalle: " + e.getMessage());
         }
     }
 
     public void buscarPorId() {
         Long id = leerLong("ID producto: ");
-        Optional<Producto> opt = productoDAO.obtenerPorId(id);
-        opt.ifPresentOrElse(
-                p -> {
-                    System.out.println(p);
-                    if (p.getCodigoBarras() != null);
-                },
-                () -> System.out.println("No encontrado.")
-        );
+        try{
+            Optional<Producto> opt = productoDAO.obtenerPorId(id);
+            opt.ifPresentOrElse(
+                    p -> {
+                        System.out.println(p);
+                        if (p.getCodigoBarras() != null);
+                    },
+                    () -> System.out.println("No encontrado.")
+            );
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al buscar el producto por id. Detalle: " + e.getMessage());
+        }
     }
 
     public void actualizar() {
         Long id = leerLong("ID a actualizar: ");
-        var opt = productoDAO.obtenerPorId(id);
-        if (opt.isEmpty()) {
-            System.out.println("No existe.");
-            return;
+        try {
+            var opt = productoDAO.obtenerPorId(id);
+            if (opt.isEmpty()) {
+                System.out.println("No existe.");
+                return;
+            }
+            Producto p = opt.get();
+            System.out.println("Dejar vacío para mantener valor actual.");
+            String nombre = leerStringDefault("Nombre (" + p.getNombre() + "): ", p.getNombre());
+            String marca = leerStringDefault("Marca (" + p.getMarca() + "): ", p.getMarca());
+            String categoria = leerStringDefault("Categoría (" + p.getCategoria() + "): ", p.getCategoria());
+            Double precio = leerDoubleDefault("Precio (" + p.getPrecio() + "): ", p.getPrecio());
+            Double peso = leerNullableDoubleDefault("Peso (" + p.getPeso() + "): ", p.getPeso());
+
+            p.setNombre(nombre);
+            p.setMarca(marca);
+            p.setCategoria(categoria);
+            p.setPrecio(precio);
+            p.setPeso(peso);
+
+            boolean ok = productoDAO.actualizar(p);
+            System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al actualizar producto. Detalle: " + e.getMessage());
         }
-        Producto p = opt.get();
-        System.out.println("Dejar vacío para mantener valor actual.");
-        String nombre = leerStringDefault("Nombre (" + p.getNombre() + "): ", p.getNombre());
-        String marca = leerStringDefault("Marca (" + p.getMarca() + "): ", p.getMarca());
-        String categoria = leerStringDefault("Categoría (" + p.getCategoria() + "): ", p.getCategoria());
-        Double precio = leerDoubleDefault("Precio (" + p.getPrecio() + "): ", p.getPrecio());
-        Double peso = leerNullableDoubleDefault("Peso (" + p.getPeso() + "): ", p.getPeso());
-
-        p.setNombre(nombre);
-        p.setMarca(marca);
-        p.setCategoria(categoria);
-        p.setPrecio(precio);
-        p.setPeso(peso);
-
-        boolean ok = productoDAO.actualizar(p);
-        System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
     }
 
     public void eliminarLogico() {
         Long id = leerLong("ID a eliminar (baja lógica): ");
-        boolean ok = productoDAO.eliminarLogico(id);
-        System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+        try {
+            if (!Objects.equals(id, "")){
+                boolean ok = productoDAO.eliminarLogico(id);
+                System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+            }
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al eliminar producto. Detalle: " + e.getMessage());
+        }
+        
     }
 
     // ---------- helpers de lectura ----------

@@ -2,7 +2,7 @@ package com.tpi.tfi.entities;
 
 public class Producto {
 
-    private Long id;
+    private Long id; 
     private boolean eliminado;
     private String nombre;
     private String marca;

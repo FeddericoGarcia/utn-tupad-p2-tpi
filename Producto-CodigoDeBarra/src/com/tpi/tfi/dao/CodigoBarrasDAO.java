@@ -2,9 +2,9 @@ package com.tpi.tfi.dao;
 
 import com.tpi.tfi.config.DatabaseConnection;
 import com.tpi.tfi.entities.CodigoBarras;
+import com.tpi.tfi.exceptions.DataAccessException;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +27,8 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) return Optional.of(rs.getLong(1));
             }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorId()", e); 
         }
         return Optional.empty();
     }
@@ -46,7 +48,9 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return Optional.of(map(rs));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorId()", e); 
+        }
         return Optional.empty();
     }
 
@@ -59,7 +63,9 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return Optional.of(map(rs));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorProductoId()", e); 
+        }
         return Optional.empty();
     }
 
@@ -68,10 +74,12 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
         List<CodigoBarras> lista = new ArrayList<>();
         String sql = "SELECT * FROM codigo_barras WHERE eliminado = FALSE";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while (rs.next()) lista.add(map(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerTodos()", e); 
+        }
         return lista;
     }
 
@@ -87,8 +95,9 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
             ps.setString(4, cb.getObservaciones());
             ps.setLong(5, cb.getId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); }
-        return false;
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.actualizar()", e); 
+        }
     }
 
     @Override
@@ -98,8 +107,9 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); }
-        return false;
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.eliminarLogico()", e); 
+        }
     }
 
     private CodigoBarras map(ResultSet rs) throws SQLException {

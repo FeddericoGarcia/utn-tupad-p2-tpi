@@ -2,8 +2,11 @@ package com.tpi.tfi.main;
 
 import com.tpi.tfi.service.CodigoBarrasService;
 import com.tpi.tfi.service.ProductoService;
+import java.sql.SQLException;
 
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AppMenu {
 
@@ -44,14 +47,18 @@ public class AppMenu {
             System.out.println("5. Baja lógica producto");
             System.out.println("0. Volver");
             opt = leerInt("Opción: ");
-            switch (opt) {
-                case 1 -> productoService.crearProductoConCodigoBarras();
-                case 2 -> productoService.listarProductos();
-                case 3 -> productoService.buscarPorId();
-                case 4 -> productoService.actualizar();
-                case 5 -> productoService.eliminarLogico();
-                case 0 -> {}
-                default -> System.out.println("Opción inválida.");
+            try {
+                switch (opt) {
+                    case 1 -> productoService.crearProductoConCodigoBarras();
+                    case 2 -> productoService.listarProductos();
+                    case 3 -> productoService.buscarPorId();
+                    case 4 -> productoService.actualizar();
+                    case 5 -> productoService.eliminarLogico();
+                    case 0 -> {}
+                    default -> System.out.println("Opción inválida.");
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(AppMenu.class.getName()).log(Level.SEVERE, null, ex);
             }
         } while (opt != 0);
     }

@@ -2,11 +2,15 @@ package com.tpi.tfi.service;
 
 import com.tpi.tfi.dao.CodigoBarrasDAO;
 import com.tpi.tfi.entities.CodigoBarras;
+import com.tpi.tfi.exceptions.DataAccessException;
+import java.sql.SQLException;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CodigoBarrasService {
 
@@ -18,7 +22,7 @@ public class CodigoBarrasService {
         String tipo = leerTipo();
         String valor = leerValor();
         LocalDate fecha = leerFecha("Fecha asignación (YYYY-MM-DD, ENTER para hoy): ", true);
-        String obs = leerString("Observaciones (ENTER para none): ");
+        String obs = leerString("Observaciones (ENTER para null): ");
 
         CodigoBarras cb = new CodigoBarras(tipo, valor, fecha, obs.isBlank() ? null : obs);
         try {
@@ -27,51 +31,70 @@ public class CodigoBarrasService {
             try (conn) {
                 cbDao.crear(cb, conn); // producto_id null
                 System.out.println("✅ Código de barras creado (sin asociar a producto).");
+            } catch (SQLException ex) {
+                Logger.getLogger(CodigoBarrasService.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (Exception e) {
-            System.out.println("❌ Error al crear código de barras: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al crear código de barras. Detalle: " + e.getMessage());
+        } catch (SQLException ex) {
+            Logger.getLogger(CodigoBarrasService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void listar() {
-        List<CodigoBarras> lista = cbDao.obtenerTodos();
-        System.out.println("\n--- Códigos de Barras ---");
-        if (lista.isEmpty()) System.out.println("(sin registros)");
-        else lista.forEach(System.out::println);
+        try {
+            List<CodigoBarras> lista = cbDao.obtenerTodos();
+            System.out.println("\n--- Códigos de Barras ---");
+            if (lista.isEmpty()) System.out.println("(sin registros)");
+            else lista.forEach(System.out::println);
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al listar códigos de barras. Detalle: " + e.getMessage());
+        }
     }
 
     public void buscarPorId() {
-        Long id = leerLong("ID código de barras: ");
-        Optional<CodigoBarras> opt = cbDao.obtenerPorId(id);
-        opt.ifPresentOrElse(System.out::println, () -> System.out.println("No encontrado."));
+        try{
+            Long id = leerLong("ID código de barras: ");
+            Optional<CodigoBarras> opt = cbDao.obtenerPorId(id);
+            opt.ifPresentOrElse(System.out::println, () -> System.out.println("No encontrado."));
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al buscar por ID de código de barras. Detalle: " + e.getMessage());
+        }
     }
 
     public void actualizar() {
-        Long id = leerLong("ID a actualizar: ");
-        var opt = cbDao.obtenerPorId(id);
-        if (opt.isEmpty()) {
-            System.out.println("No existe.");
-            return;
+        try {
+            Long id = leerLong("ID a actualizar: ");
+            var opt = cbDao.obtenerPorId(id);
+            if (opt.isEmpty()) {
+                System.out.println("No existe ID.");
+                return;
+            }
+            CodigoBarras cb = opt.get();
+            System.out.println("Dejar vacío para mantener valor actual.");
+            String tipo = leerStringDefault("Tipo (" + cb.getTipo() + "): ", cb.getTipo());
+            String valor = leerStringDefault("Valor (" + cb.getValor() + "): ", cb.getValor());
+            LocalDate fecha = leerFechaDefault("Fecha asignación (" + cb.getFechaAsignacion() + "): ", cb.getFechaAsignacion());
+            String obs = leerStringDefault("Observaciones (" + cb.getObservaciones() + "): ", cb.getObservaciones());
+            cb.setTipo(tipo);
+            cb.setValor(valor);
+            cb.setFechaAsignacion(fecha);
+            cb.setObservaciones(obs);
+            boolean ok = cbDao.actualizar(cb);
+            System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al actualizar código de barras. Detalle: " + e.getMessage());
         }
-        CodigoBarras cb = opt.get();
-        System.out.println("Dejar vacío para mantener valor actual.");
-        String tipo = leerStringDefault("Tipo (" + cb.getTipo() + "): ", cb.getTipo());
-        String valor = leerStringDefault("Valor (" + cb.getValor() + "): ", cb.getValor());
-        LocalDate fecha = leerFechaDefault("Fecha asignación (" + cb.getFechaAsignacion() + "): ", cb.getFechaAsignacion());
-        String obs = leerStringDefault("Observaciones (" + cb.getObservaciones() + "): ", cb.getObservaciones());
-        cb.setTipo(tipo);
-        cb.setValor(valor);
-        cb.setFechaAsignacion(fecha);
-        cb.setObservaciones(obs);
-        boolean ok = cbDao.actualizar(cb);
-        System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
     }
 
     public void eliminarLogico() {
-        Long id = leerLong("ID a eliminar (baja lógica): ");
-        boolean ok = cbDao.eliminarLogico(id);
-        System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+        try {
+            Long id = leerLong("ID a eliminar (baja lógica): ");
+            boolean ok = cbDao.eliminarLogico(id);
+            System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+        } catch (DataAccessException e) {
+            System.out.println("❌ Error al eliminar código de barras. Detalle: " + e.getMessage());
+        }
     }
 
     // Helpers de input

@@ -1,8 +1,8 @@
 package com.tpi.tfi.dao;
 
 import com.tpi.tfi.config.DatabaseConnection;
-import com.tpi.tfi.entities.CodigoBarras;
 import com.tpi.tfi.entities.Producto;
+import com.tpi.tfi.exceptions.DataAccessException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -29,12 +29,14 @@ public class ProductoDAO implements GenericDAO<Producto> {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) return Optional.of(rs.getLong(1));
             }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en ProductoDAO.crear()", e); 
         }
         return Optional.empty();
     }
 
-    // Implementación GenericDAO.crear con Connection param (obligatorio en interfaz)
-    // already matching override
+    // Implementación GenericDAO.crear con Connection 
+    // TODO: param (obligatorio en interfaz)
 
     @Override
     public Optional<Producto> obtenerPorId(Long id) {
@@ -50,7 +52,9 @@ public class ProductoDAO implements GenericDAO<Producto> {
                     return Optional.of(p);
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en ProductoDAO.obtenerPorId()", e); 
+        }
         return Optional.empty();
     }
 
@@ -66,7 +70,9 @@ public class ProductoDAO implements GenericDAO<Producto> {
                 codigoBarrasDAO.obtenerPorProductoId(p.getId()).ifPresent(p::setCodigoBarras);
                 lista.add(p);
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en ProductoDAO.obtenerTodos()", e); 
+        }
         return lista;
     }
 
@@ -83,8 +89,9 @@ public class ProductoDAO implements GenericDAO<Producto> {
             else ps.setNull(5, Types.DOUBLE);
             ps.setLong(6, p.getId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); }
-        return false;
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en ProductoDAO.actualizar()", e); 
+        }
     }
 
     @Override
@@ -94,8 +101,9 @@ public class ProductoDAO implements GenericDAO<Producto> {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); }
-        return false;
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en ProductoDAO.eliminarLogico()", e); 
+        }
     }
 
     private Producto map(ResultSet rs) throws SQLException {
