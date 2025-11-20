@@ -2,7 +2,7 @@
 ### *Universidad Tecnológica Nacional - UTN*   
 *Sistema de Gestión de Productos y Código de Barras*
 
----
+  
 
 ## 👥 *Integrantes del Trabajo*
 
@@ -11,7 +11,7 @@
 - Akier Aguirrezabala - Legajo 611581
 - Jazmín Herrera - DNI 47864024
 
----
+  
 
 ## 📑 *Índice General*
 
@@ -34,7 +34,7 @@
 17. Mejoras Futuras Propuestas  
 18. Conclusión  
 
----
+  
 
 ## 1. 🧭 *Introducción*
 
@@ -42,7 +42,7 @@ El presente documento describe el desarrollo del Trabajo Práctico Integrador co
 
 El proyecto fue desarrollado íntegramente en *Java 21, siguiendo buenas prácticas de programación, modularización, manejo de excepciones y acceso seguro a datos mediante **JDBC. Su persistencia se implementó sobre **MySQL, utilizando **XAMPP* como servidor local.
 
----
+  
 
 ## 2. 🎯 *Objetivo General del Proyecto*
 
@@ -55,7 +55,7 @@ El objetivo final es desarrollar un sistema de consola capaz de:
 - Utilizar transacciones  
 - Manejar excepciones de manera controlada  
 
----
+  
 
 ## 3. 📦 *Descripción Funcional del Sistema*
 
@@ -75,25 +75,25 @@ El objetivo final es desarrollar un sistema de consola capaz de:
 - Verificar duplicados  
 - Validación estricta del formato *EAN-13*
 
----
+  
 
 ## 4. 🏛️ *Arquitectura del Proyecto*
 
 El proyecto se estructura bajo una arquitectura de *capas*:
 
 
-Presentación (AppMenu / Main)
-      ↓
-Servicio (ProductoService, CodigoBarrasService)
-      ↓
-Acceso a Datos (DAO)
-      ↓
-Conexión a BD (DatabaseConnection)
-      ↓
-Base de Datos (MySQL)
+Presentación (AppMenu / Main)  
+      ↓  
+Servicio (ProductoService, CodigoBarrasService)  
+      ↓  
+Acceso a Datos (DAO)  
+      ↓  
+Conexión a BD (DatabaseConnection)  
+      ↓  
+Base de Datos (MySQL)  
 
 
----
+  
 
 ## 5. 🛠️ *Tecnologías Utilizadas*
 
@@ -105,7 +105,7 @@ Base de Datos (MySQL)
 | *mysql-connector-j* | 8.4.0 | Driver JDBC |
 | *CLI/Consola* | — | Interfaz de usuario |
 
----
+  
 
 ## 6. 🔧 *Dependencias y Configuración Inicial*
 
@@ -117,39 +117,38 @@ Para ejecutar el proyecto correctamente se requiere:
 - Driver JDBC agregado al proyecto  
 - NetBeans 20 o superior  
 
----
+  
 
 ## 7. 📁 *Estructura de Carpetas del Proyecto*
 
 
-/src
- ├── config
- │     └── DatabaseConnection.java
- ├── dao
- │     ├── ProductoDAO.java
- │     └── CodigoBarrasDAO.java
- ├── entities
- │     ├── Producto.java
- │     └── CodigoBarras.java
- ├── exceptions
- │     └── DataAccessException.java
- ├── service
- │     ├── ProductoService.java
- │     └── CodigoBarrasService.java
- ├── utils
- │     └── Validador.java
- └── main
-       ├── AppMenu.java
-       └── Main.java
+/src  
+ ├── config  
+ │     └── DatabaseConnection.java  
+ ├── dao  
+ │     ├── ProductoDAO.java  
+ │     └── CodigoBarrasDAO.java  
+ ├── entities  
+ │     ├── Producto.java  
+ │     └── CodigoBarras.java  
+ ├── exceptions  
+ │     └── DataAccessException.java  
+ ├── service  
+ │     ├── ProductoService.java  
+ │     └── CodigoBarrasService.java  
+ ├── utils  
+ │     └── Validador.java  
+ └── main  
+       ├── AppMenu.java  
+       └── Main.java  
 
 
----
+  
 
 ## 8. 🗄️ *Modelo de Datos y Estructura de Tablas*
 
 ### *Tabla: producto*
 
-sql
 CREATE TABLE producto (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -159,7 +158,6 @@ CREATE TABLE producto (
 
 ### *Tabla: codigo_barras*
 
-sql
 CREATE TABLE codigo_barras (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(13) NOT NULL UNIQUE,
@@ -168,7 +166,7 @@ CREATE TABLE codigo_barras (
 );
 
 
----
+  
 
 ## 9. 🛡️ *Validaciones y Manejo de Excepciones*
 
@@ -189,13 +187,13 @@ CREATE TABLE codigo_barras (
 - Errores de conexión  
 - Fallos transaccionales con rollback automático  
 
----
+  
 
 ## 10. 📋 *Funcionamiento del Menú Principal*
 
 ### *Menú Principal*
 
-
+```
 ===============================
         MENU PRINCIPAL
 ===============================
@@ -222,8 +220,8 @@ CREATE TABLE codigo_barras (
 3. Eliminar Código
 0. Volver
 
-
----
+```
+  
 
 ## 11. 💻 *Guía de Instalación (Windows)*
 
@@ -237,7 +235,7 @@ CREATE TABLE codigo_barras (
    Right-click Project → Properties → Libraries → Add JAR  
 8. Ejecutar Main.java  
 
----
+  
 
 ## 12. 🔌 *Configuración del Driver JDBC*
 
@@ -250,7 +248,7 @@ jdbc:mysql://localhost:3306/tpi_db?useSSL=false&allowPublicKeyRetrieval=true&ser
 - Usuario: root  
 - Contraseña: (vacía)
 
----
+  
 
 ## 13. ▶ *Ejecución del Proyecto*
 
@@ -266,7 +264,7 @@ O directamente desde la terminal del IDE:
 java Main
 
 
----
+  
 
 ## 14. ❗ *Errores Comunes y Soluciones*
 
@@ -278,7 +276,7 @@ java Main
 | Duplicate entry | Código repetido | Validar código antes del insert |
 | Cannot connect | XAMPP detenido | Activar MySQL |
 
----
+  
 
 ## 15. 📘 *Casos de Uso*
 
@@ -288,7 +286,7 @@ java Main
 - Actualización por ID  
 - Eliminación física controlada  
 
----
+  
 
 ## 16. 🔄 *Flujo Transaccional del Alta*
 
@@ -299,7 +297,7 @@ java Main
 5. Commit si todo es correcto  
 6. Rollback si ocurre cualquier error  
 
----
+  
 
 ## 17. 🚀 *Mejoras Futuras Propuestas*
 
@@ -309,7 +307,7 @@ java Main
 - Implementar categorías o stock  
 - API REST con Spring Boot  
 
----
+
 
 ## 18. 🏁 *Conclusión*
 
@@ -325,4 +323,4 @@ El proyecto implementa de forma correcta:
 
 Su estructura sólida permite una fácil extensión y mantenimiento futuro.
 
----
+
