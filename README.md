@@ -1,4 +1,3 @@
-# 🧾 Trabajo Final Integrador – Programación II 
 # 📘 *Trabajo Práctico Integrador – Programación II*  
 ### *Universidad — Sistema de Gestión de Productos y Código de Barras*
 
