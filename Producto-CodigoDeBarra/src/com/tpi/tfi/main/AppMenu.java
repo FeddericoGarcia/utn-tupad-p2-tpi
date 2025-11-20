@@ -96,6 +96,7 @@ public class AppMenu {
                 System.out.println("3. Actualizar  ");
                 System.out.println("4. Eliminar  ");
                 System.out.println("5. Buscar por ID");
+                System.out.println("6. Buscar por Valor");
                 System.out.println("0. Volver");
                 System.out.print("Opción: ");
 
@@ -104,9 +105,10 @@ public class AppMenu {
                 switch (op) {
                     case "1" -> cbService.crearManual();
                     case "2" -> cbService.listar();
-                    case "3" -> cbService.actualizar();
+                    case "3" -> cbService.actualizar(); 
                     case "4" -> cbService.eliminarLogico();
                     case "5" -> cbService.buscarPorId();
+                    case "6" -> cbService.buscarPorValor();
                     case "0" -> { return; }
                     default -> System.out.println("Opción inválida.");
                 }

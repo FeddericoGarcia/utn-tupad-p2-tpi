@@ -78,6 +78,8 @@ public class ProductoService {
                 conn.setAutoCommit(true);
             }
         } catch (DataAccessException e) {
+            e.printStackTrace();
+
             System.out.println("Error de acceso a datos: " + e.getMessage());
         }
     }

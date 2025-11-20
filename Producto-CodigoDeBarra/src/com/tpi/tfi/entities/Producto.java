@@ -50,9 +50,11 @@ public class Producto {
     @Override
     public String toString() {
         return String.format(
-                "[ID:%d] %s (%s) - $%.2f - Cat:%s - Peso:%.2f %s",
-                id, nombre, marca, precio, categoria, (peso != null ? peso : 0.0),
-                (eliminado ? "(ELIMINADO)" : "")
+                "[ID:%d] %s (%s) - $%.2f - Cat:%s - Peso:%.2f %s %s",
+                id, nombre, marca, precio, categoria,
+                (peso != null ? peso : 0.0),
+                (eliminado ? "(ELIMINADO)" : ""),
+                (codigoBarras != null ? "\n   Código: " + codigoBarras : "")
         );
     }
 }

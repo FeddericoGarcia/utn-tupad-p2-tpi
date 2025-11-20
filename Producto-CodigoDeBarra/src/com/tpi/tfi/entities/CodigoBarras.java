@@ -43,7 +43,7 @@ public class CodigoBarras {
 
     @Override
     public String toString() {
-        return String.format("[ID:%d] %s - %s (%s) %s", id, tipo, valor, fechaAsignacion,
-                (eliminado ? "(ELIMINADO)" : ""));
+        return String.format("[ID:%d] %s - %s (%s) %s / %s", id, tipo, valor, fechaAsignacion, observaciones,
+                (eliminado ? "(ELIMINADO)" : "(ACTIVO)"));
     }
 }

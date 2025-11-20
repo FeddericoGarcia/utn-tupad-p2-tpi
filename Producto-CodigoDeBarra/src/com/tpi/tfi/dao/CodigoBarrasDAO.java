@@ -29,42 +29,20 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
                 if (rs.next()) return Optional.of(rs.getLong(1));
             }
         } catch (SQLException e) {  
-            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorId()", e); 
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.crear()", e); 
         }
         return Optional.empty();
     }
     
-    /*REVISAR
-    public void crear(Connection conn, CodigoBarras cb, Long idProducto) {
-        String sql = "INSERT INTO codigo_barras (codigo, producto_id) VALUES (?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setLong(1, cb.getId());
-            ps.setLong(2, idProducto);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            if (e.getMessage().contains("Duplicate"))
-                throw new DataAccessException("Este código de barras ya existe.", e);
-
-            throw new DataAccessException("Error al crear código de barras.", e);
-        }
-    }
-*/
-
     // Implementación de GenericDAO.crear sin Connection (no usada para operaciones transaccionales)
     @Override
     public Optional<Long> crear(CodigoBarras entity, Connection conn) throws SQLException {
         return crear(entity, conn, null);
     }
 
-    @Override
-    public Optional<CodigoBarras> obtenerPorId(Long id) {
-        String sql = "SELECT * FROM codigo_barras WHERE id = ? AND eliminado = FALSE";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public Optional<CodigoBarras> obtenerPorId(Connection conn, Long id) {
+        String sql = "SELECT * FROM codigo_barras WHERE id = ? AND eliminado = 0";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return Optional.of(map(rs));
@@ -74,15 +52,43 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
         }
         return Optional.empty();
     }
-
-    // Obtener por producto_id (relación 1->1)
-    public Optional<CodigoBarras> obtenerPorProductoId(Long productoId) {
-        String sql = "SELECT * FROM codigo_barras WHERE producto_id = ? AND eliminado = FALSE";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, productoId);
+    
+    public Optional<CodigoBarras> obtenerPorValor(Connection conn, Long id) {
+        String sql = "SELECT * FROM codigo_barras WHERE valor = ? AND eliminado = 0";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return Optional.of(map(rs));
+            }
+        } catch (SQLException e) {  
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorId()", e); 
+        }
+        return Optional.empty();
+    }
+    
+    @Override
+    public Optional<CodigoBarras> obtenerPorId(Long id) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return obtenerPorId(conn, id);
+        } catch (SQLException e) {
+            throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorId()", e);
+        }
+    }
+
+    // Obtener por producto_id (relación 1->1)
+    public Optional<CodigoBarras> obtenerPorProductoId(Connection conn , Long productoId) {
+        String sql = "SELECT * FROM codigo_barras WHERE producto_id = ? AND eliminado = 0";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, productoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(new CodigoBarras(
+                        TipoCB.valueOf(rs.getString("tipo")),
+                        rs.getString("valor"),
+                        null,
+                        null
+                    ));
+                }
             }
         } catch (SQLException e) {  
             throw new DataAccessException("Error al acceder a la BD en CodigoBarrasDAO.obtenerPorProductoId()", e); 
@@ -136,26 +142,31 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
     private CodigoBarras map(ResultSet rs) throws SQLException {
         CodigoBarras cb = new CodigoBarras();
         cb.setId(rs.getLong("id"));
+        cb.setEliminado(rs.getBoolean("eliminado"));
+
         String tipoStr = rs.getString("tipo");
-        try {
-            cb.setTipo(tipoStr != null ? TipoCB.valueOf(tipoStr) : null);
-        } catch (IllegalArgumentException ex) {
-            cb.setTipo(null);
-        }
+        cb.setTipo(tipoStr != null ? TipoCB.valueOf(tipoStr) : null);
+
         cb.setValor(rs.getString("valor"));
+
+        Date fecha = rs.getDate("fecha_asignacion");
+        cb.setFechaAsignacion(fecha != null ? fecha.toLocalDate() : null);
+
+        cb.setObservaciones(rs.getString("observaciones"));
+
         return cb;
     }
     
-    public boolean existeCodigo(Connection conn, String codigo) {
-        String sql = "SELECT id FROM codigo_barras WHERE codigo = ?";
+    public boolean existeCodigo(Connection conn, String valor) {
+        String sql = "SELECT id FROM codigo_barras WHERE valor = ? AND eliminado = 0";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, codigo);
+            ps.setString(1, valor);
             ResultSet rs = ps.executeQuery();
             return rs.next();
         } catch (SQLException e) {
             throw new DataAccessException("Error al verificar existencia de código de barras.", e);
         }
     }
-    
+
 }

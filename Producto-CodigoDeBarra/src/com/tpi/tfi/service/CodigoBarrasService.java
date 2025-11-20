@@ -1,10 +1,12 @@
 package com.tpi.tfi.service;
 
+import com.tpi.tfi.config.DatabaseConnection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.sql.Connection;
 
 import com.tpi.tfi.dao.CodigoBarrasDAO;
 import com.tpi.tfi.entities.CodigoBarras;
@@ -61,10 +63,40 @@ public class CodigoBarrasService {
     public void buscarPorId() {
         try{
             Long id = leerLong("ID código de barras: ");
-            Optional<CodigoBarras> opt = cbDao.obtenerPorId(id);
-            opt.ifPresentOrElse(System.out::println, () -> System.out.println("No encontrado."));
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                Optional<CodigoBarras> opt = cbDao.obtenerPorId(conn, id);
+
+                opt.ifPresentOrElse(
+                        System.out::println,
+                        () -> System.out.println("No encontrado.")
+                );
+            }
+
         } catch (DataAccessException e) {
-            System.out.println("Error al buscar por ID de código de barras. Detalle: " + e.getMessage());
+            System.out.println("Error al buscar por ID. Detalle: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Ocurrió un error inesperado: " + e.getMessage());
+        }
+    }
+    
+    public void buscarPorValor() {
+        try{
+            Long valor = leerLong("Valor del código de barras: ");
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                Optional<CodigoBarras> opt = cbDao.obtenerPorValor(conn, valor);
+
+                opt.ifPresentOrElse(
+                        System.out::println,
+                        () -> System.out.println("No encontrado.")
+                );
+            }
+
+        } catch (DataAccessException e) {
+            System.out.println("Error al buscar por ID. Detalle: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Ocurrió un error inesperado: " + e.getMessage());
         }
     }
 
