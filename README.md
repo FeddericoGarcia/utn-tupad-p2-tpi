@@ -1,5 +1,6 @@
 # 📘 *Trabajo Práctico Integrador – Programación II*  
-### *Universidad — Sistema de Gestión de Productos y Código de Barras*
+### *Universidad Tecnológica Nacional - UTN*   
+*Sistema de Gestión de Productos y Código de Barras*
 
 ---
 
