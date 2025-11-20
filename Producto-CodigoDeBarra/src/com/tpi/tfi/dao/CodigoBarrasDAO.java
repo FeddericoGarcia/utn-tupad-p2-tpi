@@ -2,6 +2,7 @@ package com.tpi.tfi.dao;
 
 import com.tpi.tfi.config.DatabaseConnection;
 import com.tpi.tfi.entities.CodigoBarras;
+import com.tpi.tfi.enums.TipoCB;
 import com.tpi.tfi.exceptions.DataAccessException;
 
 import java.sql.*;
@@ -15,7 +16,7 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
     public Optional<Long> crear(CodigoBarras cb, Connection conn, Long productoId) throws SQLException {
         String sql = "INSERT INTO codigo_barras (tipo, valor, fecha_asignacion, observaciones, producto_id, eliminado) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, cb.getTipo());
+            ps.setString(1, cb.getTipo().name());
             ps.setString(2, cb.getValor());
             if (cb.getFechaAsignacion() != null) ps.setDate(3, Date.valueOf(cb.getFechaAsignacion()));
             else ps.setNull(3, Types.DATE);
@@ -108,7 +109,7 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
         String sql = "UPDATE codigo_barras SET tipo=?, valor=?, fecha_asignacion=?, observaciones=? WHERE id=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cb.getTipo());
+            ps.setString(1, cb.getTipo().name());
             ps.setString(2, cb.getValor());
             if (cb.getFechaAsignacion() != null) ps.setDate(3, Date.valueOf(cb.getFechaAsignacion()));
             else ps.setNull(3, Types.DATE);
@@ -135,12 +136,13 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
     private CodigoBarras map(ResultSet rs) throws SQLException {
         CodigoBarras cb = new CodigoBarras();
         cb.setId(rs.getLong("id"));
-        cb.setTipo(rs.getString("tipo"));
+        String tipoStr = rs.getString("tipo");
+        try {
+            cb.setTipo(tipoStr != null ? TipoCB.valueOf(tipoStr) : null);
+        } catch (IllegalArgumentException ex) {
+            cb.setTipo(null);
+        }
         cb.setValor(rs.getString("valor"));
-        Date d = rs.getDate("fecha_asignacion");
-        if (d != null) cb.setFechaAsignacion(d.toLocalDate());
-        cb.setObservaciones(rs.getString("observaciones"));
-        cb.setEliminado(rs.getBoolean("eliminado"));
         return cb;
     }
     
@@ -155,4 +157,5 @@ public class CodigoBarrasDAO implements GenericDAO<CodigoBarras> {
             throw new DataAccessException("Error al verificar existencia de código de barras.", e);
         }
     }
+    
 }
