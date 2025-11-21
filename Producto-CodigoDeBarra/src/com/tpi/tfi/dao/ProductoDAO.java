@@ -30,6 +30,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
                 if (rs.next()) return Optional.of(rs.getLong(1));
             }
         } catch (SQLException e) {  
+            e.printStackTrace();
             throw new DataAccessException("Error al acceder a la BD en ProductoDAO.crear()", e); 
         }
         return Optional.empty();
@@ -40,7 +41,8 @@ public class ProductoDAO implements GenericDAO<Producto> {
 
     @Override
     public Optional<Producto> obtenerPorId(Long id) {
-        String sql = "SELECT * FROM producto WHERE id = ? AND eliminado = FALSE";
+        String sql = """
+                     SELECT * FROM producto WHERE id = ?""";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -48,7 +50,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
                 if (rs.next()) {
                     Producto p = map(rs);
                     // Obtener el CodigoBarras asociado (si existe)
-                    codigoBarrasDAO.obtenerPorProductoId(p.getId()).ifPresent(p::setCodigoBarras);
+                    codigoBarrasDAO.obtenerPorProductoId(conn, p.getId()).ifPresent(p::setCodigoBarras);
                     return Optional.of(p);
                 }
             }
@@ -67,7 +69,7 @@ public class ProductoDAO implements GenericDAO<Producto> {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Producto p = map(rs);
-                codigoBarrasDAO.obtenerPorProductoId(p.getId()).ifPresent(p::setCodigoBarras);
+                codigoBarrasDAO.obtenerPorProductoId(conn, p.getId()).ifPresent(p::setCodigoBarras);
                 lista.add(p);
             }
         } catch (SQLException e) {  

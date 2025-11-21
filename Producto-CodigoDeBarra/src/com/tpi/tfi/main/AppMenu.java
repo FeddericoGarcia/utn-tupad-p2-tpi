@@ -15,8 +15,20 @@ public class AppMenu {
         while (true) {
             try {
                 System.out.println("");
-                System.out.println("Trabajo Práctico Integrador del curso de Programación II"
-                        + " de la Universidad Técnológica Nacional");
+                System.out.println("""
+                                   Trabajo Práctico Integrador de la materia Programación II
+                                    de la Universidad Tecnológica Nacional (UTN)""");
+                System.out.println("\n===============================");
+                System.out.println("""
+                                   Integrantes: 
+                                   - Federico Garcia Bengolea
+                                   - Alan N. Jofre
+                                   - Jazmin Herrera
+                                   - Akier Aguirrezabala""");
+                System.out.println("\n===============================");
+                System.out.println("""
+                                    Sistema de gestión de Productos 
+                                        y Códigos de Barra""");
                 System.out.println("\n===============================");
                 System.out.println("        MENU PRINCIPAL        ");
                 System.out.println("===============================");
@@ -34,11 +46,11 @@ public class AppMenu {
                         System.out.println("Saliendo del sistema...");
                         return;
                     }
-                    default -> System.out.println("⚠ Opción inválida.");
+                    default -> System.out.println("Opción inválida.");
                 }
 
             } catch (Exception e) {
-                System.out.println("❌ Error inesperado: " + e.getMessage());
+                System.out.println("Error inesperado: " + e.getMessage());
             }
         }
     }
@@ -50,8 +62,9 @@ public class AppMenu {
                 System.out.println("\n---------- MENÚ PRODUCTOS ----------");
                 System.out.println("1. Crear Producto con Código");
                 System.out.println("2. Listar Productos");
-                System.out.println("3. Actualizar Producto");
-                System.out.println("4. Eliminar Producto");
+                System.out.println("3. Actualizar ");
+                System.out.println("4. Eliminar ");
+                System.out.println("5. Buscar por ID");
                 System.out.println("0. Volver");
                 System.out.print("Opción: ");
 
@@ -62,12 +75,13 @@ public class AppMenu {
                     case "2" -> productoService.listarProductos();
                     case "3" -> productoService.actualizar(); 
                     case "4" -> productoService.eliminarLogico();
+                    case "5" -> productoService.buscarPorId();
                     case "0" -> { return; }
-                    default -> System.out.println("⚠ Opción inválida.");
+                    default -> System.out.println("Opción inválida.");
                 }
 
             } catch (Exception e) {
-                System.out.println("❌ Error en menú Productos: " + e.getMessage());
+                System.out.println("Error en menú Productos: " + e.getMessage());
             }
         }
     }
@@ -77,10 +91,12 @@ public class AppMenu {
         while (true) {
             try {
                 System.out.println("\n------ MENÚ CÓDIGO DE BARRAS ------");
-                System.out.println("1. Crear Código de Barras con Código");
-                System.out.println("2. Listar Código de Barras");
-                System.out.println("3. Actualizar Código ");
-                System.out.println("4. Eliminar Código ");
+                System.out.println("1. Crear Código de Barras");
+                System.out.println("2. Listar Códigos de Barras");
+                System.out.println("3. Actualizar  ");
+                System.out.println("4. Eliminar  ");
+                System.out.println("5. Buscar por ID");
+                System.out.println("6. Buscar por Valor");
                 System.out.println("0. Volver");
                 System.out.print("Opción: ");
 
@@ -89,14 +105,16 @@ public class AppMenu {
                 switch (op) {
                     case "1" -> cbService.crearManual();
                     case "2" -> cbService.listar();
-                    case "3" -> cbService.actualizar();
+                    case "3" -> cbService.actualizar(); 
                     case "4" -> cbService.eliminarLogico();
+                    case "5" -> cbService.buscarPorId();
+                    case "6" -> cbService.buscarPorValor();
                     case "0" -> { return; }
-                    default -> System.out.println("⚠ Opción inválida.");
+                    default -> System.out.println("Opción inválida.");
                 }
 
             } catch (Exception e) {
-                System.out.println("❌ Error en menú Códigos: " + e.getMessage());
+                System.out.println("Error en menú Códigos: " + e.getMessage());
             }
         }
     }

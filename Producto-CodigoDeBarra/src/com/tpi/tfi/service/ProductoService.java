@@ -5,7 +5,9 @@ import com.tpi.tfi.dao.CodigoBarrasDAO;
 import com.tpi.tfi.dao.ProductoDAO;
 import com.tpi.tfi.entities.CodigoBarras;
 import com.tpi.tfi.entities.Producto;
+import com.tpi.tfi.enums.TipoCB;
 import com.tpi.tfi.exceptions.DataAccessException;
+import com.tpi.tfi.utils.Validador;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,8 +34,20 @@ public class ProductoService {
         Double peso = leerNullableDouble("Peso (ENTER para null): ");
 
         // Datos del código de barras
-        String tipo = leerString("Tipo (EAN13/EAN8/UPC): ").toUpperCase();
+        System.out.println("Seleccione tipo de código:");
+        System.out.println("1) EAN-13");
+        System.out.println("2) EAN-8");
+        System.out.println("3) UPC-A");
+        String opt = leerString("\n:").trim();
+        TipoCB tipo;
+        switch(opt) {
+            case "1": tipo = TipoCB.EAN_13; break;
+            case "2": tipo = TipoCB.EAN_8; break;
+            case "3": tipo = TipoCB.UPC_A; break;
+            default: throw new IllegalArgumentException("Tipo inválido");
+        }
         String valor = leerString("Valor del código: ");
+        Validador.validarCodigoOBLIGATORIO(valor, tipo);
 
         Producto p = new Producto(nombre, marca, categoria, precio, peso);
         CodigoBarras cb = new CodigoBarras(tipo, valor, java.time.LocalDate.now(), null);
@@ -41,7 +55,8 @@ public class ProductoService {
         try (Connection conn = DatabaseConnection.getConnection()) {
             try {
                 conn.setAutoCommit(false);
-
+                
+                if (cbDAO.existeCodigo(conn, valor)) throw new IllegalArgumentException("Código duplicado.");
                 // operaciones
                 Long idProd = productoDAO.crear(p, conn)
                         .orElseThrow(() -> new DataAccessException("No se pudo crear el producto", null));
@@ -54,7 +69,7 @@ public class ProductoService {
             } catch (Exception e) {
                 try {
                     conn.rollback();
-                    System.out.println("⚠ Se realizó un rollback debido a un error.");
+                    System.out.println("Se realizó un rollback debido a un error.");
                 } catch (SQLException ex) {
                     throw new DataAccessException("Error crítico: no se pudo revertir la transacción", ex);
                 }
@@ -63,7 +78,9 @@ public class ProductoService {
                 conn.setAutoCommit(true);
             }
         } catch (DataAccessException e) {
-            System.out.println("❌ Error de acceso a datos: " + e.getMessage());
+            e.printStackTrace();
+
+            System.out.println("Error de acceso a datos: " + e.getMessage());
         }
     }
 
@@ -79,7 +96,7 @@ public class ProductoService {
                 }
             }
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al listar productos. Detalle: " + e.getMessage());
+            System.out.println("Error al listar productos. Detalle: " + e.getMessage());
         }
     }
 
@@ -95,7 +112,7 @@ public class ProductoService {
                     () -> System.out.println("No encontrado.")
             );
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al buscar el producto por id. Detalle: " + e.getMessage());
+            System.out.println("Error al buscar el producto por id. Detalle: " + e.getMessage());
         }
     }
 
@@ -122,9 +139,9 @@ public class ProductoService {
             p.setPeso(peso);
 
             boolean ok = productoDAO.actualizar(p);
-            System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
+            System.out.println(ok ? "Actualizado." : "Error al actualizar.");
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al actualizar producto. Detalle: " + e.getMessage());
+            System.out.println("Error al actualizar producto. Detalle: " + e.getMessage());
         }
     }
 
@@ -133,10 +150,10 @@ public class ProductoService {
         try {
             if (!Objects.equals(id, "")){
                 boolean ok = productoDAO.eliminarLogico(id);
-                System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+                System.out.println(ok ? "Eliminado lógicamente." : "No se pudo eliminar.");
             }
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al eliminar producto. Detalle: " + e.getMessage());
+            System.out.println("Error al eliminar producto. Detalle: " + e.getMessage());
         }
         
     }

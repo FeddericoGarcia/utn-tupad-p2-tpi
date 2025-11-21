@@ -1,44 +1,52 @@
 package com.tpi.tfi.service;
 
-import com.tpi.tfi.dao.CodigoBarrasDAO;
-import com.tpi.tfi.entities.CodigoBarras;
-import com.tpi.tfi.exceptions.DataAccessException;
+import com.tpi.tfi.config.DatabaseConnection;
 import java.sql.SQLException;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.Connection;
+
+import com.tpi.tfi.dao.CodigoBarrasDAO;
+import com.tpi.tfi.entities.CodigoBarras;
+import com.tpi.tfi.enums.TipoCB;
+import com.tpi.tfi.exceptions.DataAccessException;
+import com.tpi.tfi.utils.Validador;
 
 public class CodigoBarrasService {
 
     private final CodigoBarrasDAO cbDao = new CodigoBarrasDAO();
     private final Scanner sc = new Scanner(System.in);
-
+    
     public void crearManual() {
-        System.out.println("\n--- Crear Código de Barras (manual) ---");
-        String tipo = leerTipo();
-        String valor = leerValor();
-        LocalDate fecha = leerFecha("Fecha asignación (YYYY-MM-DD, ENTER para hoy): ", true);
-        String obs = leerString("Observaciones (ENTER para null): ");
+            System.out.println("\n--- Crear Código de Barras (manual) ---");
+            System.out.println("Seleccione tipo de código:");
+            System.out.println("1) EAN-13");
+            System.out.println("2) EAN-8");
+            System.out.println("3) UPC-A");
+            String opt = sc.nextLine().trim();
+            TipoCB tipo = elegirTipo(opt);
+            String valor = leerValor();
+            LocalDate fecha = leerFecha("Fecha asignación (YYYY-MM-DD, ENTER para hoy): ", true);
+            String obs = leerString("Observaciones (ENTER para null): ");
 
-        CodigoBarras cb = new CodigoBarras(tipo, valor, fecha, obs.isBlank() ? null : obs);
-        try {
-            // usamos una conexión simple (no transaccional)
-            var conn = com.tpi.tfi.config.DatabaseConnection.getConnection();
-            try (conn) {
+            // VALIDACIÓN
+            Validador.validarCodigoOBLIGATORIO(valor, tipo);
+
+            CodigoBarras cb = new CodigoBarras(
+                tipo,
+                valor,
+                fecha,
+                obs.isBlank() ? null : obs
+            );
+
+            try (var conn = com.tpi.tfi.config.DatabaseConnection.getConnection()) {
                 cbDao.crear(cb, conn); // producto_id null
-                System.out.println("✅ Código de barras creado (sin asociar a producto).");
-            } catch (SQLException ex) {
-                Logger.getLogger(CodigoBarrasService.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Código de barras creado (sin asociar a producto).");
+            } catch (SQLException | DataAccessException e) {
+                System.out.println("Error al crear código de barras. Detalle: " + e.getMessage());
             }
-        } catch (DataAccessException e) {
-            System.out.println("❌ Error al crear código de barras. Detalle: " + e.getMessage());
-        } catch (SQLException ex) {
-            Logger.getLogger(CodigoBarrasService.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     public void listar() {
@@ -48,17 +56,47 @@ public class CodigoBarrasService {
             if (lista.isEmpty()) System.out.println("(sin registros)");
             else lista.forEach(System.out::println);
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al listar códigos de barras. Detalle: " + e.getMessage());
+            System.out.println("Error al listar códigos de barras. Detalle: " + e.getMessage());
         }
     }
 
     public void buscarPorId() {
         try{
             Long id = leerLong("ID código de barras: ");
-            Optional<CodigoBarras> opt = cbDao.obtenerPorId(id);
-            opt.ifPresentOrElse(System.out::println, () -> System.out.println("No encontrado."));
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                Optional<CodigoBarras> opt = cbDao.obtenerPorId(conn, id);
+
+                opt.ifPresentOrElse(
+                        System.out::println,
+                        () -> System.out.println("No encontrado.")
+                );
+            }
+
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al buscar por ID de código de barras. Detalle: " + e.getMessage());
+            System.out.println("Error al buscar por ID. Detalle: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Ocurrió un error inesperado: " + e.getMessage());
+        }
+    }
+    
+    public void buscarPorValor() {
+        try{
+            Long valor = leerLong("Valor del código de barras: ");
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                Optional<CodigoBarras> opt = cbDao.obtenerPorValor(conn, valor);
+
+                opt.ifPresentOrElse(
+                        System.out::println,
+                        () -> System.out.println("No encontrado.")
+                );
+            }
+
+        } catch (DataAccessException e) {
+            System.out.println("Error al buscar por ID. Detalle: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Ocurrió un error inesperado: " + e.getMessage());
         }
     }
 
@@ -71,9 +109,10 @@ public class CodigoBarrasService {
                 return;
             }
             CodigoBarras cb = opt.get();
-            System.out.println("Dejar vacío para mantener valor actual.");
-            String tipo = leerStringDefault("Tipo (" + cb.getTipo() + "): ", cb.getTipo());
-            String valor = leerStringDefault("Valor (" + cb.getValor() + "): ", cb.getValor());
+            System.out.println("");
+            String tipoStr = leerStringDefault("Tipo : ", cb.getTipo().name());
+            TipoCB tipo = TipoCB.valueOf(tipoStr);
+            String valor = leerStringDefault("Valor : ", cb.getValor());
             LocalDate fecha = leerFechaDefault("Fecha asignación (" + cb.getFechaAsignacion() + "): ", cb.getFechaAsignacion());
             String obs = leerStringDefault("Observaciones (" + cb.getObservaciones() + "): ", cb.getObservaciones());
             cb.setTipo(tipo);
@@ -81,9 +120,9 @@ public class CodigoBarrasService {
             cb.setFechaAsignacion(fecha);
             cb.setObservaciones(obs);
             boolean ok = cbDao.actualizar(cb);
-            System.out.println(ok ? "✅ Actualizado." : "❌ Error al actualizar.");
+            System.out.println(ok ? "Actualizado." : "Error al actualizar.");
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al actualizar código de barras. Detalle: " + e.getMessage());
+            System.out.println("Error al actualizar código de barras. Detalle: " + e.getMessage());
         }
     }
 
@@ -91,9 +130,9 @@ public class CodigoBarrasService {
         try {
             Long id = leerLong("ID a eliminar (baja lógica): ");
             boolean ok = cbDao.eliminarLogico(id);
-            System.out.println(ok ? "🗑️ Eliminado lógicamente." : "❌ No se pudo eliminar.");
+            System.out.println(ok ? "Eliminado lógicamente." : "No se pudo eliminar.");
         } catch (DataAccessException e) {
-            System.out.println("❌ Error al eliminar código de barras. Detalle: " + e.getMessage());
+            System.out.println("Error al eliminar código de barras. Detalle: " + e.getMessage());
         }
     }
 
@@ -144,12 +183,14 @@ public class CodigoBarrasService {
         }
     }
 
-    private String leerTipo() {
-        while (true) {
-            System.out.print("Tipo (EAN13 / EAN8 / UPC): ");
-            String t = sc.nextLine().trim().toUpperCase();
-            if (t.equals("EAN13") || t.equals("EAN8") || t.equals("UPC")) return t;
-            System.out.println("Tipo inválido.");
+    private TipoCB elegirTipo(String opt) {
+        switch (opt) {
+            case "1": return TipoCB.EAN_13;
+            case "2": return TipoCB.EAN_8;
+            case "3": return TipoCB.UPC_A;
+            default: 
+                System.out.println("Opción inválida. Se usa EAN-13.");
+                return TipoCB.EAN_13;
         }
     }
 

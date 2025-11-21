@@ -1,19 +1,20 @@
 package com.tpi.tfi.entities;
 
+import com.tpi.tfi.enums.TipoCB;
 import java.time.LocalDate;
 
 public class CodigoBarras {
 
     private Long id;
     private boolean eliminado;
-    private String tipo; // EAN13, EAN8, UPC
+    private TipoCB tipo; // EAN13, EAN8, UPC
     private String valor;
     private LocalDate fechaAsignacion;
     private String observaciones;
 
     public CodigoBarras() {}
 
-    public CodigoBarras(String tipo, String valor, LocalDate fechaAsignacion, String observaciones) {
+    public CodigoBarras(TipoCB tipo, String valor, LocalDate fechaAsignacion, String observaciones) {
         this.tipo = tipo;
         this.valor = valor;
         this.fechaAsignacion = fechaAsignacion;
@@ -28,8 +29,8 @@ public class CodigoBarras {
     public boolean isEliminado() { return eliminado; }
     public void setEliminado(boolean eliminado) { this.eliminado = eliminado; }
 
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
+    public TipoCB getTipo() { return tipo; }
+    public void setTipo(TipoCB tipo) { this.tipo = tipo; }
 
     public String getValor() { return valor; }
     public void setValor(String valor) { this.valor = valor; }
@@ -42,7 +43,7 @@ public class CodigoBarras {
 
     @Override
     public String toString() {
-        return String.format("[ID:%d] %s - %s (%s) %s", id, tipo, valor, fechaAsignacion,
-                (eliminado ? "(ELIMINADO)" : ""));
+        return String.format("[ID:%d] %s - %s (%s) %s / %s", id, tipo, valor, fechaAsignacion, observaciones,
+                (eliminado ? "(ELIMINADO)" : "(ACTIVO)"));
     }
 }

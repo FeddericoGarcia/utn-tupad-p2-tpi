@@ -1,5 +1,7 @@
 package com.tpi.tfi.utils;
 
+import com.tpi.tfi.enums.TipoCB;
+
 public class Validador {
 
     public static String validarNombre(String nombre) {
@@ -28,18 +30,18 @@ public class Validador {
         }
     }
 
-    public static String validarCodigoBarras(String codigo) {
-        if (codigo == null || codigo.isBlank()) {
-            throw new IllegalArgumentException("El código de barras no puede estar vacío.");
+    public static boolean esCodigoValidoSegunTipo(String codigo, TipoCB tipo) {
+        if (codigo == null || tipo == null) return false;
+        return tipo.validarCodigo(codigo);
+    }
+
+    public static void validarCodigoOBLIGATORIO(String codigo, TipoCB tipo) {
+        if (!esCodigoValidoSegunTipo(codigo, tipo)) {
+            throw new IllegalArgumentException(
+                "El código no es válido para el tipo " + tipo.getNombre() +
+                ". Debe tener " + tipo.getLongitud() + " dígitos numéricos."
+            );
         }
-
-        codigo = codigo.trim();
-
-        if (!codigo.matches("\\d{13}")) {
-            throw new IllegalArgumentException("El código de barras debe contener exactamente 13 dígitos numéricos.");
-        }
-
-        return codigo;
     }
 
 }
